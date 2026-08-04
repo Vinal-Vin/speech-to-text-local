@@ -1,0 +1,28 @@
+# --- Core service (always installed) ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+pydantic==2.10.4
+pydantic-settings==2.7.0
+numpy==2.2.1
+soundfile==0.13.0
+
+# --- Default ASR backend: NVIDIA Parakeet TDT via ONNX Runtime (CPU) ---
+# Transducer decoder: no per-token autoregressive cost, so it is by far the
+# fastest of the three on CPU. This is the shipping default.
+onnx-asr[cpu,hub]==0.12.0
+
+# --- Silero VAD ---
+# pysilero-vad is the ONNX build: it bundles the model file and reuses the
+# onnxruntime pulled in above, so VAD costs no extra download and no torch.
+pysilero-vad==3.4.0
+
+# --- Optional backends -------------------------------------------------------
+# NOT installed by default: together they add >2 GB to the image, and the
+# server lazy-imports backends so an uninstalled one costs nothing until it is
+# selected via ASR_BACKEND. Enable with the matching Docker build arg:
+#
+#   docker compose build --build-arg INSTALL_WHISPER=1
+#   docker compose build --build-arg INSTALL_QWEN=1
+#
+# see server/requirements-whisper.txt and server/requirements-qwen.txt

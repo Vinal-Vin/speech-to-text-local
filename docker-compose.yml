@@ -1,0 +1,50 @@
+services:
+  stt-server:
+    build:
+      context: ./server
+      args:
+        # Flip to 1 and rebuild to enable the optional backends.
+        #   docker compose build --build-arg INSTALL_WHISPER=1
+        INSTALL_WHISPER: ${INSTALL_WHISPER:-0}
+        INSTALL_QWEN: ${INSTALL_QWEN:-0}
+    image: speech-to-text-local/server:latest
+    container_name: stt-server
+
+    ports:
+      # Bound to 127.0.0.1 deliberately: this service has no authentication,
+      # and it must never be reachable from the wider network.
+      - "127.0.0.1:8760:8000"
+
+    volumes:
+      # Persists downloaded weights across rebuilds.
+      - ./models:/models
+
+    environment:
+      # --- Swap the backend here; no rebuild needed for parakeet <-> dummy ---
+      ASR_BACKEND: ${ASR_BACKEND:-parakeet}
+      # Left empty on purpose: each backend then picks its own correct default
+      # (see DEFAULT_MODELS in server/app/config.py), so `ASR_BACKEND=whisper
+      # docker compose up -d` just works instead of handing whisper a parakeet
+      # model id. Set it only to override.
+      ASR_MODEL: ${ASR_MODEL:-}
+      ASR_QUANTIZATION: ${ASR_QUANTIZATION:-int8}
+      ASR_LANGUAGE: ${ASR_LANGUAGE:-en}
+      ASR_THREADS: ${ASR_THREADS:-0}
+      VAD_ENABLED: ${VAD_ENABLED:-true}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # If your corporate proxy intercepts TLS, uncomment and set these so the
+      # first-run model download from Hugging Face can succeed:
+      # HTTP_PROXY: ${HTTP_PROXY:-}
+      # HTTPS_PROXY: ${HTTPS_PROXY:-}
+      # REQUESTS_CA_BUNDLE: /certs/corporate-ca.crt
+
+    restart: unless-stopped
+
+    healthcheck:
+      # start_period is generous: the first run downloads ~600 MB before the
+      # model can report healthy.
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 600s

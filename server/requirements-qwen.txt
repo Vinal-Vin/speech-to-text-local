@@ -1,0 +1,11 @@
+# Optional backend: Qwen3-ASR via the transformers runtime.
+# Install with: docker compose build --build-arg INSTALL_QWEN=1
+#
+# NOTE: this pulls a CPU build of torch (~1.5 GB), which is why it is not in
+# the default image. Qwen3-ASR is an autoregressive decoder, so expect
+# materially higher CPU latency than Parakeet -- measure it with
+# scripts/benchmark.py before adopting it as your default.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.5.1
+qwen-asr
+librosa==0.10.2.post1

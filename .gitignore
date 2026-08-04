@@ -1,0 +1,28 @@
+# Model weights (downloaded on first run, mounted as a volume)
+models/
+*.onnx
+*.bin
+*.gguf
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Local config (may contain machine-specific device indices)
+config.toml
+client/config.toml
+
+# Recordings captured by scripts/benchmark.py
+samples/
+*.wav
+!tests/fixtures/*.wav
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

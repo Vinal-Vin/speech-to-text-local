@@ -1,0 +1,55 @@
+# stt-local client configuration.
+#
+# Copy to %APPDATA%\stt-local\config.toml and edit:
+#   mkdir "%APPDATA%\stt-local"
+#   copy client\config.example.toml "%APPDATA%\stt-local\config.toml"
+
+# --- Server ------------------------------------------------------------------
+server_url = "http://127.0.0.1:8760"
+request_timeout_s = 120.0
+
+# --- Hotkey ------------------------------------------------------------------
+# Hold to record, release to transcribe.
+# Good choices: "ctrl_r" (right Ctrl), "f9", "scroll_lock", "pause".
+# Avoid Fn-layer keys -- they often never reach user-space hooks.
+hotkey = "ctrl_r"
+
+# Ignore accidental taps shorter than this (milliseconds).
+min_record_ms = 300
+
+# Safety cap so a stuck key cannot record forever (seconds).
+max_record_s = 300.0
+
+# --- Audio -------------------------------------------------------------------
+sample_rate = 16000
+# Leave unset for the system default. See indices with:
+#   python -m stt_client --list-devices
+# input_device = 1
+
+# --- Insertion ---------------------------------------------------------------
+# "paste"          clipboard + synthetic Ctrl+V   (default; fast, Unicode-safe)
+# "type"           synthetic per-character typing (for apps that refuse paste)
+# "clipboard_only" copy only, you press Ctrl+V    (works even where synthetic
+#                  input is blocked by endpoint security)
+insert_mode = "paste"
+
+restore_clipboard = true
+clipboard_restore_delay_ms = 300
+
+# Appended after every transcript. Set to " " to keep dictating inline.
+append_text = ""
+
+# --- Feedback ----------------------------------------------------------------
+sound_cues = true
+tray_icon = true
+
+# --- Text fixups -------------------------------------------------------------
+# Case-insensitive replacements applied to every transcript. Worth building up
+# over time: ASR models reliably mis-hear the same technical terms, and this is
+# far cheaper than re-dictating.
+[replacements]
+"get hub" = "GitHub"
+"pie test" = "pytest"
+"num pie" = "numpy"
+"dock er" = "Docker"
+"jason" = "JSON"
