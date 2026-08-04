@@ -56,6 +56,10 @@ python -m stt_client --print-only
 
 # 5. Run for real
 python -m stt_client
+
+# 6. Optional: launch at sign-in (per-user Startup folder; no admin, no registry)
+.\scripts\setup-client.ps1 -AddToStartup
+.\scripts\setup-client.ps1 -RemoveFromStartup   # to undo
 ```
 
 Hold **Right Ctrl**, speak, release. Text appears at the cursor.

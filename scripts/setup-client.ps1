@@ -10,12 +10,21 @@
     embeddable ZIP into this folder and uses it: no installer, no admin, no
     registry writes, nothing outside your user directory.
 
+    -AddToStartup creates a shortcut in your per-user Startup folder so the
+    client launches at sign-in. This writes only to your own profile: no admin
+    rights, no registry Run key, no machine-wide changes. Undo with
+    -RemoveFromStartup.
+
 .EXAMPLE
     .\scripts\setup-client.ps1
     .\scripts\setup-client.ps1 -Embeddable
+    .\scripts\setup-client.ps1 -AddToStartup
+    .\scripts\setup-client.ps1 -RemoveFromStartup
 #>
 param(
     [switch]$Embeddable,
+    [switch]$AddToStartup,
+    [switch]$RemoveFromStartup,
     [string]$PythonVersion = "3.12.8"
 )
 
@@ -25,6 +34,21 @@ Set-Location $Root
 
 Write-Host "stt-local client setup" -ForegroundColor Cyan
 Write-Host "======================`n"
+
+$StartupLink = Join-Path ([Environment]::GetFolderPath('Startup')) "stt-local.lnk"
+
+# Removal is handled before anything else so it works even if the environment
+# was never fully set up.
+if ($RemoveFromStartup) {
+    if (Test-Path $StartupLink) {
+        Remove-Item $StartupLink -Force
+        Write-Host "Removed from Startup: $StartupLink" -ForegroundColor Green
+    }
+    else {
+        Write-Host "Nothing to remove -- no Startup entry found."
+    }
+    exit 0
+}
 
 function Test-Python {
     try {
@@ -96,6 +120,32 @@ if (-not (Test-Path $cfg)) {
 }
 else {
     Write-Host "`nConfig already exists: $cfg"
+}
+
+# --- Optional: launch at sign-in -------------------------------------------
+if ($AddToStartup) {
+    # pythonw.exe runs without a console window -- this is a tray app, so a
+    # stray black window at every sign-in would be a nuisance.
+    $pyw = Join-Path (Split-Path -Parent $py) "pythonw.exe"
+    if (-not (Test-Path $pyw)) { $pyw = $py }
+
+    $shell = New-Object -ComObject WScript.Shell
+    $lnk = $shell.CreateShortcut($StartupLink)
+    $lnk.TargetPath = $pyw
+    $lnk.Arguments = "-m stt_client"
+    $lnk.WorkingDirectory = Join-Path $Root "client"
+    $lnk.Description = "stt-local push-to-talk dictation"
+    $lnk.WindowStyle = 7   # minimised
+    $lnk.Save()
+
+    Write-Host "`nAdded to Startup: $StartupLink" -ForegroundColor Green
+    Write-Host "  target: $pyw -m stt_client"
+    Write-Host "  Remove with: .\scripts\setup-client.ps1 -RemoveFromStartup"
+    Write-Host "  Note: the Docker server must also be running for it to work;" -ForegroundColor Yellow
+    Write-Host "        'restart: unless-stopped' in compose handles that."   -ForegroundColor Yellow
+}
+elseif (-not (Test-Path $StartupLink)) {
+    Write-Host "`nTip: run with -AddToStartup to launch the client at sign-in."
 }
 
 Write-Host "`nSetup complete." -ForegroundColor Green
