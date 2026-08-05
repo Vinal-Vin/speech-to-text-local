@@ -39,6 +39,19 @@ entirely. The client stays a thin process with only prebuilt-wheel deps.
 
 ## Quick start
 
+> **Working in WSL?** Use the launcher — it starts the client as a *Windows*
+> process via WSL interop, so you can stay in your WSL terminal:
+>
+> ```bash
+> ./scripts/wsl.sh doctor     # environment checks
+> ./scripts/wsl.sh setup      # install the client  (add -Embeddable if needed)
+> ./scripts/wsl.sh run        # start dictating
+> ```
+>
+> Clone to `/mnt/c/Users/<you>/...` (the real Windows disk seen from WSL), not
+> into the WSL filesystem — the launcher warns if you don't. Everything below
+> is the equivalent done directly from Windows PowerShell.
+
 > **Run the client from Windows PowerShell — not from WSL.**
 > The client needs the Windows microphone, a Windows global keyboard hook, and
 > Windows `SendInput` to type into Windows apps. WSL has none of those and
@@ -241,7 +254,8 @@ clipboard contents should still be intact.
 
 | Symptom | Cause / fix |
 |---|---|
-| `permission denied (os error 13)` running setup | You're in WSL. The client is Windows-only — run it from Windows PowerShell. `sudo` cannot help |
+| `permission denied (os error 13)` running setup | You're in WSL. The client is Windows-only — use `./scripts/wsl.sh setup`, or run from Windows PowerShell. `sudo` cannot help |
+| `WSL interop is not available` | Windows binaries aren't executable from WSL. Set `[interop] enabled=true` in `/etc/wsl.conf`, then `wsl --shutdown` |
 | `running scripts is disabled on this system` | `powershell -ExecutionPolicy Bypass -File .\scripts\setup-client.ps1` |
 | Setup is very slow, odd permission errors | Repo cloned inside WSL; the client is reading it over `\\wsl$`. Re-clone to `C:\Users\<you>\` |
 | `Cannot reach the ASR server` | `docker compose up -d`; check `docker compose logs` |
