@@ -39,6 +39,25 @@ entirely. The client stays a thin process with only prebuilt-wheel deps.
 
 ## Quick start
 
+> **Run the client from Windows PowerShell — not from WSL.**
+> The client needs the Windows microphone, a Windows global keyboard hook, and
+> Windows `SendInput` to type into Windows apps. WSL has none of those and
+> cannot send a keystroke to a Windows window, so it fails with
+> `permission denied (os error 13)` — and `sudo` will not help.
+>
+> **Clone to the Windows filesystem** (`C:\Users\<you>\...`), not inside WSL.
+> Running the client over the `\\wsl$` share is slow and causes permission errors.
+>
+> Only `docker compose` (the server) is fine to run from WSL.
+
+If PowerShell refuses to run the script (`running scripts is disabled on this
+system`) — common on managed devices — bypass it for that one call without
+changing any machine setting:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\setup-client.ps1
+```
+
 ```powershell
 # 1. Check this machine can actually run it  (see "Corporate machines" below)
 python scripts\doctor.py
@@ -222,6 +241,9 @@ clipboard contents should still be intact.
 
 | Symptom | Cause / fix |
 |---|---|
+| `permission denied (os error 13)` running setup | You're in WSL. The client is Windows-only — run it from Windows PowerShell. `sudo` cannot help |
+| `running scripts is disabled on this system` | `powershell -ExecutionPolicy Bypass -File .\scripts\setup-client.ps1` |
+| Setup is very slow, odd permission errors | Repo cloned inside WSL; the client is reading it over `\\wsl$`. Re-clone to `C:\Users\<you>\` |
 | `Cannot reach the ASR server` | `docker compose up -d`; check `docker compose logs` |
 | First dictation times out | Model still downloading — watch `docker compose logs -f` |
 | Text appears nowhere | Target window is elevated (UIPI), or synthetic input blocked → `clipboard_only` |

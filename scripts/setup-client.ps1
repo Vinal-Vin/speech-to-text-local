@@ -32,6 +32,38 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
 
+# --- Refuse to run anywhere but Windows ------------------------------------
+# The client needs the Windows microphone, a Windows global keyboard hook, and
+# Windows SendInput to type into Windows apps. WSL has none of these and cannot
+# send a keystroke to a Windows window, so running here can only fail -- and it
+# fails confusingly ("permission denied", os error 13) rather than clearly.
+# Windows PowerShell 5.1 (Desktop edition) has no $IsWindows and is Windows-only.
+$onWindows = $true
+if ($PSVersionTable.PSVersion.Major -ge 6) { $onWindows = $IsWindows }
+
+if (-not $onWindows) {
+    $where = if ($env:WSL_DISTRO_NAME) { "WSL ($env:WSL_DISTRO_NAME)" } else { "a non-Windows OS" }
+    Write-Host "`nThis script is running under $where." -ForegroundColor Red
+    Write-Host @"
+
+The dictation CLIENT cannot run here, and sudo will not help. It requires:
+  - the Windows microphone
+  - a Windows global keyboard hook (push-to-talk)
+  - Windows SendInput, to type into Windows applications
+
+WSL cannot do any of these. Run the client from Windows PowerShell instead:
+
+    cd C:\Users\<you>\speech-to-text-local
+    powershell -ExecutionPolicy Bypass -File .\scripts\setup-client.ps1
+
+Clone to the Windows filesystem (C:\Users\...), not inside WSL -- running the
+client over the \\wsl$ share is slow and causes permission errors.
+
+The SERVER is unaffected: 'docker compose up -d' works fine from WSL.
+"@ -ForegroundColor Yellow
+    exit 1
+}
+
 Write-Host "stt-local client setup" -ForegroundColor Cyan
 Write-Host "======================`n"
 
